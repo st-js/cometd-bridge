@@ -1,6 +1,7 @@
 package org.stjs.bridge.cometd;
 
 import org.stjs.javascript.annotation.Namespace;
+import org.stjs.javascript.annotation.STJSBridge;
 import org.stjs.javascript.functions.Callback0;
 import org.stjs.javascript.functions.Callback1;
 import org.stjs.javascript.functions.Callback4;
@@ -246,6 +247,7 @@ import org.stjs.javascript.functions.Callback4;
  * The Bayeux server processes batched messages in the order they are sent.
  */
 @Namespace("org.cometd")
+@STJSBridge(sources = "webjar:cometd.js")
 public class Cometd {
 
 	/**
