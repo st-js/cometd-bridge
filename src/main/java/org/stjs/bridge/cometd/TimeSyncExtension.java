@@ -58,6 +58,14 @@ import org.stjs.javascript.annotation.STJSBridge;
 @STJSBridge(sources = "webjar:TimeSyncExtension.js")
 public class TimeSyncExtension implements CometdExtension {
 
+	public TimeSyncExtension() {
+		// nothing to do
+	}
+
+	public TimeSyncExtension(TimeSyncExtensionConfig config){
+		// nothing to do
+	}
+
 	/**
 	 * Get the estimated offset in ms from the clients clock to the
 	 * servers clock.  The server time is the client time plus the offset.
