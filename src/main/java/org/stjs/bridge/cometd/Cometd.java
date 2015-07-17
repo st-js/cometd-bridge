@@ -1,6 +1,5 @@
 package org.stjs.bridge.cometd;
 
-import org.stjs.javascript.annotation.Namespace;
 import org.stjs.javascript.annotation.STJSBridge;
 import org.stjs.javascript.functions.Callback0;
 import org.stjs.javascript.functions.Callback1;
@@ -282,7 +281,7 @@ public class Cometd {
 	 *
 	 * @param configuration The full configuration of this client
 	 */
-	public native void configure(CometdConfiguration configuration);
+	public native void configure(CometdConfig configuration);
 
 	/**
 	 * Equivalent to calling <tt>handshake(null, null)</tt>
@@ -693,7 +692,7 @@ public class Cometd {
 	 * @param configuration       the full configuration of this client
 	 * @param handshakeAdditional An object containing additional informations/fields that will be merged into the handshake message
 	 */
-	public native void init(CometdConfiguration configuration, Object handshakeAdditional);
+	public native void init(CometdConfig configuration, Object handshakeAdditional);
 
 	/**
 	 * Registers an extension whose callbacks are called for every incoming message
@@ -734,4 +733,48 @@ public class Cometd {
 	 */
 	public native CometdExtension getExtension(String name);
 
+	/**
+	 * Defines the global extension exception handler that is invoked every time an extension throws an exception (for example, calling a
+	 * function on an undefined object):
+	 * <pre>
+	 * cometd.onExtensionException = (exception, extensionName, outgoing, message) -> {
+	 *     // Uh-oh, something went wrong, disable this extension
+	 *     cometd.unregisterExtension(extensionName);
+	 *
+	 *     // If the message is going to the server, add the error to the message
+	 *     if (outgoing) {
+	 *         // Assume you have created the message structure below
+	 *         ErrorMessage badExtension = message.ext.badExtensions[extensionName];
+	 *         badExtension.exception = exception;
+	 *     }
+	 * };
+	 * </pre>
+	 * <p/>
+	 * Be very careful to use the CometD object to publish messages within the extension exception handler, or you might end up in an infinite
+	 * loop (the extensions process the publish message, which might fail and call again the extension exception handler). If the extension
+	 * exception handler itself throws an exception, this exception is logged at level "info" and the CometD implementation does not break.
+	 */
+	public Callback4<Object, String, Boolean, BayeuxMessage> onExtensionException;
+
+	/**
+	 * Enables or disables the AckExtension.
+	 */
+	public boolean ackEnabled;
+
+	/**
+	 * Equivalent to calling <tt>reload(null)</tt>
+	 */
+	public native void reload();
+
+	/**
+	 * When the reload() method is called, the state of the cometd
+	 * connection and of the cometd subscriptions is stored in a cookie
+	 * with a short max-age.
+	 * The reload() method must therefore be called by page unload
+	 * handlers, often provided by JavaScript toolkits.
+	 *
+	 * When the page is (re)loaded, this extension checks the cookie
+	 * and restores the cometd connection and the cometd subscriptions.
+	 */
+	public native void reload(ReloadExtensionConfig config);
 }

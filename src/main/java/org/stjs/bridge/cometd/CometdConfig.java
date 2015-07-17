@@ -7,7 +7,7 @@ import org.stjs.javascript.annotation.SyntheticType;
  * A configuration object that can be passed to <tt>Cometd.configure()</tt> or <tt>Cometd.init()</tt>
  */
 @SyntheticType
-public class CometdConfiguration {
+public class CometdConfig {
 
 	/**
 	 * The URL of the Bayeux server this client will connect to. he URL of the server must be absolute (and therefore include the scheme,

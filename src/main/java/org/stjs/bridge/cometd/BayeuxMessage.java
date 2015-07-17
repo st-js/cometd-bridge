@@ -1,6 +1,7 @@
 package org.stjs.bridge.cometd;
 
 import org.stjs.javascript.Array;
+import org.stjs.javascript.Map;
 import org.stjs.javascript.annotation.SyntheticType;
 
 /**
@@ -9,7 +10,7 @@ import org.stjs.javascript.annotation.SyntheticType;
  * Definitions)  for more details of which fields are used in which message.
  */
 @SyntheticType
-public class BayeuxMessage {
+public class BayeuxMessage extends Map<String, Object> {
 
 	/**
 	 * The channel message field MUST be included in every Bayeux message to specify the source or destination of the message. In a request, the
