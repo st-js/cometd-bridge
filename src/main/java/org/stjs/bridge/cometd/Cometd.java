@@ -1,7 +1,7 @@
 package org.stjs.bridge.cometd;
 
-import org.stjs.javascript.Map;
 import org.stjs.javascript.annotation.Namespace;
+import org.stjs.javascript.functions.Callback0;
 import org.stjs.javascript.functions.Callback1;
 import org.stjs.javascript.functions.Callback4;
 
@@ -111,6 +111,139 @@ import org.stjs.javascript.functions.Callback4;
  * <p/>
  * By default, subscriptions to the global wildcards <tt>/*</tt> and <tt>/**</tt> result in an error, but you can change this behavior by
  * specifying a custom security policy on the Bayeux server.
+ * <p/>
+ * <h3>Publishing</h3>
+ * <p/>
+ * The <tt>publish()</tt> method allows you to publish data onto a certain channel:
+ * <p/>
+ * <pre>cometd.publish("/mychannel", new MyMessage("foo", 2));</pre>
+ * <p/>
+ * You cannot (and it makes no sense to) publish to a meta channel, but you can publish to a service or broadcast channel even if you are not
+ * subscribed to that channel. However, you have to handshake before you can publish.
+ * <p/>
+ * <h3>Disconnecting</h3>
+ * <p/>
+ * The JavaScript CometD implementation performs automatic reconnect in case of network or Bayeux server failures.
+ * <p/>
+ * Calling the JavaScript CometD API <tt>disconnect()</tt> results in a message being sent to the Bayeux server so that it can clean up any
+ * state associated with that client. As with all methods that involve a communication with the Bayeux server, it is an asynchronous method: it
+ * returns immediately, well before the Bayeux server has received the disconnect request. If the server is unreachable (because it is down or
+ * because
+ * of network failures), the JavaScript CometD implementation stops any reconnection attempt and cleans up any local state. It is normally safe
+ * to
+ * ignore if the disconnect() call has been successful or not: the client is in any case disconnected, its local state cleaned up, and if the
+ * server has not been reached it eventually times out the client and cleans up any server-side state for that client.
+ * <p/>
+ * <h4>Short Network Failures</h4>
+ * <p/>
+ * In case of temporary network failures, the client is notified through the <tt>/meta/connect</tt> channel with messages that have the
+ * successful field set to <tt>false</tt>. However, the Bayeux server might be able to keep the client's state, and when the network resumes the
+ * Bayeux server might behave as if nothing happened. The client in this case just re-establishes the long poll, but any message the client
+ * publishes during the network failure is not automatically re-sent (though it is possible to be notified, through the <tt>/meta/publish</tt>
+ * channel or better yet through callback functions, of the failed publishes).
+ * <p/>
+ * <h4></h4>Long Network Failures or Server Failures</h4>
+ * <p/>
+ * If the network failure is long enough, the Bayeux server times out the lost client, and deletes the state associated with it. The same
+ * happens  when the Bayeux server crashes (except that the state of all clients is lost). In this case, the reconnection mechanism on the
+ * client
+ * performs the following steps:
+ * <ol>
+ * <li>A long poll is re-attempted, but the server rejects it with a 402::Unknown client error message.</li>
+ * <li>A handshake is attempted, and the server normally accepts it and allocates a new client.</li>
+ * <li>Upon the successful re-handshake, a long poll is re-established.</li>
+ * </ol>
+ * <p/>
+ * If you register meta channels listener, or if you use callback functions, be aware of these steps, since a reconnection might involve more
+ * than one message exchange with the server.
+ * <p/>
+ * <h3>Message Batching</h3>
+ * <p/>
+ * Often an application needs to send several messages to different channels. A naive way of doing it follows:
+ * <p/>
+ * <pre>
+ * // Warning: non-optimal code
+ * cometd.publish("/channel1", new Message1("foo"));
+ * cometd.publish("/channel2", new Message2("all"));
+ * cometd.publish("/channel3", new Message3("false"));
+ * </pre>
+ * <p/>
+ * You might think that the three publishes leave the client one after the other, but that is not the case. Remember that <tt>publish()</tt> is
+ * asynchronous (it returns immediately), so the three <tt>publish()</tt> calls in sequence likely return well before a single byte reaches the
+ * network. The first <tt>publish()</tt> executes immediately, and the other two are in a queue, waiting for the first <tt>publish()</tt> to
+ * complete. A <tt>publish()</tt> is complete when the server receives it, sends back the meta response, and the client receives the meta
+ * response for that publish. When the first publish completes, the second publish is executed and waits to complete. After that, the third
+ * <tt>publish()</tt> finally executes.
+ * <p/>
+ * If you set the configuration parameter called <tt>autoBatch</tt> to <tt>true</tt>, the implementation automatically batches messages that
+ * have been queued. In the example above, the first <tt>publish()</tt> executes immediately, and when it completes, the implementation batches
+ * the second and third <tt>publish()</tt> into one request to the server. The autoBatch feature is interesting for those systems where events
+ * received asynchronously and unpredictably – either at a fast rate or in bursts – end up generating a <tt>publish()</tt> to the server: in
+ * such
+ * cases, using the batching API is not effective (as each event would generate only one <tt>publish()</tt>). A burst of events on the client
+ * generates a burst of <tt>publish()</tt> to the server, but the <tt>autobatch</tt> mechanism batches them automatically, making the
+ * communication more efficient.
+ * <p/>
+ * The queueing mechanism avoids queueing a <tt>publish()</tt> behind a long poll. If not for this mechanism, the browser would receive three
+ * publish
+ * requests but it has only two connections available, and one is already occupied by the long poll request. Therefore, the browser might decide
+ * to round-robin the publish requests, so that the first publish goes on the second connection, which is free, and it is actually sent over the
+ * network, (remember that the first connection is already busy with the long poll request), schedule the second publish to the first connection
+ * (after the long poll returns), and schedule the third publish again to the second connection, after the first publish returns. The result is
+ * that if you have a long poll timeout of five minutes, the second publish request might arrive at the server five minutes later than the first
+ * and the third publish request.
+ * <p/>
+ * You can optimize the three publishes using batching, which is a way to group messages together so that a single Bayeux message actually
+ * carries the three publish messages.
+ * <p/>
+ * <pre>
+ * cometd.batch(() -> {
+ *     cometd.publish("/channel1", new Message1("foo"));
+ *     cometd.publish("/channel2", new Message2("all"));
+ *     cometd.publish("/channel3", new Message3("false"));
+ * });
+ *
+ * // Alternatively, but not recommended:
+ * cometd.startBatch()
+ * cometd.publish("/channel1", new Message1("foo"));
+ * cometd.publish("/channel2", new Message2("all"));
+ * cometd.publish("/channel3", new Message3("false"));
+ * cometd.endBatch()
+ * </pre>
+ * <p/>
+ * Notice how the three <tt>publish()</tt> calls are now within a function passed to batch().
+ * <p/>
+ * Alternatively, but less recommended, you can surround the three <tt>publish()</tt> calls between <tt>startBatch()</tt> and
+ * <tt>endBatch()</tt>.
+ * <p/>
+ * Warning: Remember to call <tt>endBatch()</tt> after calling <tt>startBatch()</tt>. If you don't - for example, because an exception is thrown
+ * in the middle of the batch - your messages continue to queue, and your application does not work as expected.
+ * <p/>
+ * If you still want to risk using the <tt>startBatch()</tt> and <tt>endBatch()</tt> calls, remember that you must do so from the same context
+ * of
+ * execution;  message batching has not been designed to span multiple user interactions. For example, it would be wrong to start a batch in
+ * functionA (triggered by user interaction), and ending the batch in functionB (also triggered by user interaction and not called by
+ * functionA).
+ * Similarly, it would be wrong to start a batch in functionA and then schedule (using <tt>setTimeout()</tt>) the execution of functionB to end
+ * the batch. Function <tt>batch()</tt> already does the correct batching for you (also in case of errors), so it is the recommended way to do
+ * message batching.
+ * <p/>
+ * When a batch starts, subsequent API calls are not sent to the server, but instead queued until the batch ends. The end of the batch packs up
+ * all the queued messages into one single Bayeux message and sends it over the network to the Bayeux server.
+ * <p/>
+ * Message batching allows efficient use of the network: instead of making three request/response cycles, batching makes only one
+ * request/response cycle.
+ * <p/>
+ * Batches can consist of different API calls:
+ * <p/>
+ * CometdSubscription subscription;
+ * cometd.batch(() -> {
+ * cometd.unsubscribe(subscription);
+ * subscription = cometd.subscribe("/foo", message -> ...);
+ * cometd.publish("/bar", anotherMessage);
+ * });
+ * <p/>
+ * The Bayeux server processes batched messages in the order they are sent.
  */
 @Namespace("org.cometd")
 public class Cometd {
@@ -358,6 +491,7 @@ public class Cometd {
 	public Callback4<Object, CometdSubscription, Boolean, BayeuxMessage> onListenerException;
 
 	/**
+	 * Synchronously adds a listener to the specified meta channel.
 	 * The <tt>addListener()</tt> method:
 	 * <ul>
 	 * <li>Must be used to listen to meta channel messages.</li>
@@ -367,101 +501,198 @@ public class Cometd {
 	 * <li>Is synchronous: when it returns, you are guaranteed that the listener has been added.</li>
 	 * </ul>
 	 * <p/>
-	 * <p/>
-	 * <p/>
-	 * <p/>
-	 * <p/>
 	 * These are the meta channels available in the JavaScript CometD implementation:
+	 * <ul>
+	 * <li>/meta/handshake</li>
+	 * <li>/meta/connect</li>
+	 * <li>/meta/disconnect</li>
+	 * <li>/meta/subscribe</li>
+	 * <li>/meta/unsubscribe</li>
+	 * <li>/meta/publish</li>
+	 * <li>/meta/unsuccessful</li>
+	 * </ul>
 	 * <p/>
-	 * /meta/handshake
+	 * Each meta channel is notified when the JavaScript CometD implementation handles the correspondent Bayeux message. The
+	 * <tt>/meta/unsuccessful</tt> channel is notified in case of any failure.
 	 * <p/>
-	 * /meta/connect
+	 * By far the most interesting meta channel to subscribe to is <tt>/meta/connect</tt> because it gives the status of the current connection
+	 * with the Bayeux server. In combination with <tt>/meta/disconnect</tt>, you can use it, for example, to display a green connected icon or
+	 * a red disconnected icon on the page, depending on the connection status with the Bayeux server.
 	 * <p/>
-	 * /meta/disconnect
+	 * Here is a common pattern using the <tt>/meta/connect</tt> and <tt>/meta/disconnect</tt> channels:
 	 * <p/>
-	 * /meta/subscribe
-	 * <p/>
-	 * /meta/unsubscribe
-	 * <p/>
-	 * /meta/publish
-	 * <p/>
-	 * /meta/unsuccessful
-	 * <p/>
-	 * Each meta channel is notified when the JavaScript CometD implementation handles the correspondent Bayeux message. The /meta/unsuccessful
-	 * channel is notified in case of any failure.
-	 * <p/>
-	 * By far the most interesting meta channel to subscribe to is /meta/connect because it gives the status of the current connection with the
-	 * Bayeux server. In combination with /meta/disconnect, you can use it, for example, to display a green connected icon or a red disconnected
-	 * icon on the page, depending on the connection status with the Bayeux server.
-	 * <p/>
-	 * Here is a common pattern using the /meta/connect and /meta/disconnect channels:
-	 * <p/>
-	 * var _connected = false;
-	 * <p/>
-	 * cometd.addListener('/meta/connect', function(message)
-	 * {
-	 * if (cometd.isDisconnected())
-	 * {
-	 * return;
-	 * }
-	 * <p/>
-	 * var wasConnected = _connected;
-	 * _connected = message.successful;
-	 * if (!wasConnected && _connected)
-	 * {
-	 * // Reconnected
-	 * }
-	 * else if (wasConnected && !_connected)
-	 * {
-	 * // Disconnected
-	 * }
+	 * <pre>
+	 * boolean connected = false;
+	 * cometd.addListener("/meta/connect", message -> {
+	 *     if (cometd.isDisconnected()) {
+	 *         return;
+	 *     }
+	 *
+	 *     boolean wasConnected = connected;
+	 *     connected = message.successful;
+	 *     if (!wasConnected && connected) {
+	 *         // Reconnected
+	 *     } else if (wasConnected && !connected) {
+	 *         // Disconnected
+	 *     }
 	 * });
+	 *
+	 * cometd.addListener("/meta/disconnect", message -> {
+	 *     if (message.successful) {
+	 *         connected = false;
+	 *     }
+	 * });
+	 * </pre>
 	 * <p/>
-	 * cometd.addListener('/meta/disconnect', function(message)
-	 * {
-	 * if (message.successful)
-	 * {
-	 * _connected = false;
-	 * }
-	 * }
-	 * <p/>
-	 * One small caveat with the /meta/connect channel is that /meta/connect is also used for polling the server. Therefore, if a disconnect is
-	 * issued during an active poll, the server returns the active poll and this triggers the /meta/connect listener. The initial check on the
-	 * status verifies that is not the case before executing the connection logic.
+	 * One small caveat with the <tt>/meta/connect</tt> channel is that <tt>/meta/connect</tt> is also used for polling the server. Therefore,
+	 * if a disconnect is issued during an active poll, the server returns the active poll and this triggers the <tt>/meta/connect</tt>
+	 * listener.
+	 * The initial check on the status verifies that is not the case before executing the connection logic.
 	 * <p/>
 	 * Another interesting use of meta channels is when there is an authentication step during the handshake. In this case the registration to
-	 * the /meta/handshake channel can give details about, for example, authentication failures.
+	 * the <tt>/meta/handshake</tt> channel can give details about, for example, authentication failures.
+	 *
+	 * @param channel           the name of the meta channel to listen to
+	 * @param onMessageReceived a callback function that is invoked any time a message is received on the channel
 	 */
-	public Object addListener(String string, Callback1<BayeuxMessage> callback1) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void removeListener(Object subscription) {
-		throw new UnsupportedOperationException();
-	}
+	public native CometdSubscription addListener(String channel, Callback1<BayeuxMessage> onMessageReceived);
 
 	/**
-	 * shorthand for calling configure() followed by handshake()
+	 * Clears the specified listener.
+	 *
+	 * @param subscription the subscription that is to be cleared.
 	 */
-	public void init(Map<String, String> $map) {
-		throw new UnsupportedOperationException();
-	}
+	public native void removeListener(CometdSubscription subscription);
 
-	public void disconnect() {
-		throw new UnsupportedOperationException();
-	}
+	/**
+	 * Equivalent to calling <tt>publish(channel, messagePayload, null)</tt>
+	 *
+	 * @param channel        the name of the channel to which the message must be published
+	 * @param messagePayload the payload object that will be sent in the <tt>data.content</tt> field of the published Bayeux message
+	 */
+	public native void publish(String channel, Object messagePayload);
 
-	public boolean isDisconnected() {
-		throw new UnsupportedOperationException();
-	}
+	/**
+	 * Publishes the specified message to the specified channel.
+	 * <p/>
+	 * As with other JavaScript CometD API, <tt>publish()</tt> involves a communication with the server and it is asynchronous: it returns
+	 * immediately, well before the Bayeux server has received the message.
+	 * <p/>
+	 * <pre>cometd.publish("/mychannel", new MyMessage("foo", 2));</pre>
+	 * <p/>
+	 * You cannot (and it makes no sense to) publish to a meta channel, but you can publish to a service or broadcast channel even if you are
+	 * not subscribed to that channel. However, you have to handshake before you can publish.
+	 * <p/>
+	 * When the message you published arrives to the server, the server replies to the client with a publish acknowledgment; this allows clients
+	 * to be sure that the message reached the server. The publish acknowledgment arrives on the same channel the message was published to, with
+	 * the same message id, with a successful field. If the message publish fails for any reason, for example because server cannot be reached,
+	 * then a publish failure will be emitted, similarly to publish acknowledgments.
+	 * <p/>
+	 * For historical reasons, publish acknowledgments and failures are notified on the <tt>/meta/publish</tt> channel (only in the JavaScript
+	 * library), even if the <tt>/meta/publish</tt> channel is not part of Appendix C, The Bayeux Protocol Specification v1.0.
+	 *
+	 * @param channel        the name of the channel to which the message must be published
+	 * @param messagePayload the payload object that will be sent in the <tt>data.content</tt> field of the published Bayeux message
+	 * @param onPublishReply a callback function that is called when the reply to the publish request is received
+	 */
+	public native void publish(String channel, Object messagePayload, Callback1<BayeuxMessage> onPublishReply);
 
-	public void startBatch() {
-		throw new UnsupportedOperationException();
-	}
+	/**
+	 * Equivalent to calling <tt>disconnect(null, null)</tt>
+	 */
+	public native void disconnect();
 
-	public void endBatch() {
-		throw new UnsupportedOperationException();
-	}
+	/**
+	 * Equivalent to calling <tt>disconnect(null, onDisconnectReply)</tt>
+	 *
+	 * @param onDisconnectReply a callback function that is called when the disconnect reply is received
+	 */
+	public native void disconnect(Callback1<BayeuxMessage> onDisconnectReply);
+
+	/**
+	 * Sends a message to the Bayeux server so that it can clean up any state associated with this client.
+	 * <p/>
+	 * As with all methods that involve a communication with the Bayeux server, this is an asynchronous method: it returns
+	 * immediately, well before the Bayeux server has received the disconnect request. If the server is unreachable (because it is down or
+	 * because of network failures), the JavaScript CometD implementation stops any reconnection attempt and cleans up any local state. It is
+	 * normally safe to ignore if the <tt>disconnect()</tt> call has been successful or not: the client is in any case disconnected, its local
+	 * state cleaned up, and if the server has not been reached it eventually times out the client and cleans up any server-side state for that
+	 * client.
+	 * <p/>
+	 * Tip: If you are debugging your application with Firebug, and you shut down the server, you see in the Firebug console the attempts to
+	 * reconnect. To stop those attempts, type in the Firebug command line: <tt>dojox.cometd.disconnect()</tt> (for Dojo) or
+	 * <tt>$.cometd.disconnect()</tt> (for jQuery).
+	 * <p/>
+	 * In case you really want to know whether the server received the disconnect request, you can pass a callback function to the
+	 * <tt>disconnect()</tt> function:
+	 * <p/>
+	 * <pre>
+	 * cometd.disconnect(disconnectReply -> {
+	 *     if (disconnectReply.successful) {
+	 *         // Server truly received the disconnect request
+	 *     }
+	 * });
+	 * </pre>
+	 * Like other APIs, also <tt>disconnect()</tt> may take an additional object that is sent to the server:
+	 * <p/>
+	 * <pre>
+	 * MyAdditionalThing additional = new MyAdditionalThing(true);
+	 * cometd.disconnect(additional, disconnectReply -> ...);
+	 * </pre>
+	 *
+	 * @param additional        an object containing additional informations/fields that will be merged into the disconnect message
+	 * @param onDisconnectReply a callback function that is called when the disconnect reply is received
+	 */
+	public native void disconnect(Object additional, Callback1<BayeuxMessage> onDisconnectReply);
+
+	/**
+	 * Checks if this Cometd client is connected or not. The bayeux client will always set this flag to the most up to date value before
+	 * notifying listeners or callback functions.
+	 *
+	 * @return true if this client is disconnected from the Bayeux server, false if is still connected
+	 */
+	public native boolean isDisconnected();
+
+	/**
+	 * Ensures that all of the Bayeux messages sent from within the specified batch function are sent in the same request to the Bayeux server.
+	 * The messages sent in the batch are processed by the Bayeux server in the order in which they were received.
+	 *
+	 * @param batch a functions that sends an arbitrary number of messages to the Bayeux server
+	 */
+	public native void batch(Callback0 batch);
+
+	/**
+	 * Marks the start of a batch of application messages to be sent to the server in a single request, obtaining a single response containing
+	 * (possibly) many application reply messages. Messages are held in a queue and not sent until {@link #endBatch()} is called. If
+	 * startBatch()
+	 * is called multiple times, then an equal number of endBatch() calls must be made to close and send the batch of messages.
+	 *
+	 * @see #endBatch()
+	 */
+	public native void startBatch();
+
+	/**
+	 * Marks the end of a batch of application messages to be sent to the server in a single request.
+	 *
+	 * @see #startBatch()
+	 */
+	public native void endBatch();
+
+	/**
+	 * Equivalent to calling <tt>cometd.configure(url)</tt> followed by <tt>cometd.handshake(handshakeAdditional, null)</tt>
+	 *
+	 * @param url                 the URL of the Bayeux server
+	 * @param handshakeAdditional An object containing additional informations/fields that will be merged into the handshake message
+	 */
+	public native void init(String url, Object handshakeAdditional);
+
+	/**
+	 * Equivalent to calling <tt>cometd.configure(configuration)</tt> followed by <tt>cometd.handshake(handshakeAdditional, null)</tt>
+	 *
+	 * @param configuration       the full configuration of this client
+	 * @param handshakeAdditional An object containing additional informations/fields that will be merged into the handshake message
+	 */
+	public native void init(CometdConfiguration configuration, Object handshakeAdditional);
 
 	public native void registerExtension(String extensionName, CometdExtension extension);
 }

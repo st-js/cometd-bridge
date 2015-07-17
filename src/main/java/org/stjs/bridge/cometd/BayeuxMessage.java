@@ -8,5 +8,4 @@ public class BayeuxMessage {
 	public boolean successful;
 
 	public Data data;
-
 }
