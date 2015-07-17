@@ -1,12 +1,14 @@
 package org.stjs.bridge.cometd;
 
 import org.stjs.javascript.Array;
+import org.stjs.javascript.annotation.SyntheticType;
 
 /**
  * A message a specified in the Bayeux protocol specification. Most of the fields of BayeuxMessage are only used by a subset of all the messages
  * defined in the Bayeux protocol. See the Bayeux protocol 1.0.0 specification, sections 4 (Meta Message Definitions) and 5 (Event Message
  * Definitions)  for more details of which fields are used in which message.
  */
+@SyntheticType
 public class BayeuxMessage {
 
 	/**

@@ -2,6 +2,7 @@ package org.stjs.bridge.cometd;
 
 import org.stjs.javascript.Array;
 import org.stjs.javascript.Map;
+import org.stjs.javascript.annotation.SyntheticType;
 
 /**
  * The advice field provides a way for servers to inform clients of their preferred mode of client operation so that in conjunction with
@@ -26,6 +27,7 @@ import org.stjs.javascript.Map;
  * }
  * </pre>
  */
+@SyntheticType
 public class BayeuxAdvice extends Map<String, Object> {
 
 	/**

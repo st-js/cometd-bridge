@@ -246,7 +246,6 @@ import org.stjs.javascript.functions.Callback4;
  * <p/>
  * The Bayeux server processes batched messages in the order they are sent.
  */
-@Namespace("org.cometd")
 @STJSBridge(sources = "webjar:cometd.js")
 public class Cometd {
 
@@ -696,5 +695,43 @@ public class Cometd {
 	 */
 	public native void init(CometdConfiguration configuration, Object handshakeAdditional);
 
-	public native void registerExtension(String extensionName, CometdExtension extension);
+	/**
+	 * Registers an extension whose callbacks are called for every incoming message
+	 * (that comes from the server to this client implementation) and for every
+	 * outgoing message (that originates from this client implementation for the
+	 * server).
+	 * The format of the extension object is the following:
+	 * <pre>
+	 * {
+	 *     incoming: function(message) { ... },
+	 *     outgoing: function(message) { ... }
+	 * }
+	 * </pre>
+	 * Both properties are optional, but if they are present they will be called
+	 * respectively for each incoming message and for each outgoing message.
+	 *
+	 * @param name      the name of the extension
+	 * @param extension the extension to register
+	 * @return true if the extension was registered, false otherwise
+	 * @see #unregisterExtension(String)
+	 */
+	public native void registerExtension(String name, CometdExtension extension);
+
+	/**
+	 * Unregister an extension previously registered with
+	 * {@link #registerExtension(String, CometdExtension)}.
+	 *
+	 * @param name the name of the extension to unregister.
+	 * @return true if the extension was unregistered, false otherwise
+	 */
+	public native void unregisterExtension(String name);
+
+	/**
+	 * Find the extension registered with the given name.
+	 *
+	 * @param name the name of the extension to find
+	 * @return the extension found or null if no extension with the given name has been registered
+	 */
+	public native CometdExtension getExtension(String name);
+
 }
