@@ -38,9 +38,5 @@ import org.stjs.javascript.annotation.STJSBridge;
  * loss of messages. It does not guarantee however, that messages sent by the client will reach the server.
  */
 @STJSBridge(sources = "webjar:AckExtension.js")
-public class AckExtension implements CometdExtension {
-	public native void outgoing(BayeuxMessage message);
-	public native void incoming(BayeuxMessage message);
-	public native void registered(String name, Cometd cometd);
-	public native void unregistered();
+public class AckExtension extends CometdExtension {
 }

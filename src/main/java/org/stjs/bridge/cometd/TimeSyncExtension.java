@@ -56,7 +56,7 @@ import org.stjs.javascript.annotation.STJSBridge;
  * <pre>offset = ts-tc-lag</pre>
  */
 @STJSBridge(sources = "webjar:TimeSyncExtension.js")
-public class TimeSyncExtension implements CometdExtension {
+public class TimeSyncExtension extends CometdExtension {
 
 	public TimeSyncExtension() {
 		// nothing to do
@@ -92,12 +92,4 @@ public class TimeSyncExtension implements CometdExtension {
 	 * Get the estimated server time as a Date object
 	 */
 	public native Date getServerDate();
-
-	public native void outgoing(BayeuxMessage message);
-
-	public native void incoming(BayeuxMessage message);
-
-	public native void registered(String name, Cometd cometd);
-
-	public native void unregistered();
 }

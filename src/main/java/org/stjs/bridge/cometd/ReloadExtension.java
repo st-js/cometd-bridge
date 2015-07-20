@@ -9,7 +9,7 @@ import org.stjs.javascript.annotation.STJSBridge;
  * In both Dojo and jQuery extension bindings, the extension is registered on the default cometd object under the name "reload".
  */
 @STJSBridge(sources = "webjar:ReloadExtension.js")
-public class ReloadExtension implements CometdExtension {
+public class ReloadExtension extends CometdExtension {
 
 	/**
 	 * Configures this reload extension.
@@ -17,12 +17,4 @@ public class ReloadExtension implements CometdExtension {
 	 * @param config the configuration to apply
 	 */
 	public native void configure(ReloadExtensionConfig config);
-
-	public native void outgoing(BayeuxMessage message);
-
-	public native void incoming(BayeuxMessage message);
-
-	public native void registered(String name, Cometd cometd);
-
-	public native void unregistered();
 }
