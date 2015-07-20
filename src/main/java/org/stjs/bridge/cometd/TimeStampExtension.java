@@ -9,6 +9,6 @@ import org.stjs.javascript.annotation.STJSBridge;
  * <p/>
  * In both Dojo and jQuery extension bindings, the extension is registered on the default cometd object under the name "timestamp".
  */
-@STJSBridge(sources = "webjar:TimeStampExtension.js")
+@STJSBridge(sources = "webjar:/TimeStampExtension.js")
 public class TimeStampExtension extends CometdExtension {
 }

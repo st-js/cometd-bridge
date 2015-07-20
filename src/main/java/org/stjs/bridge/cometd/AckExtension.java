@@ -37,6 +37,6 @@ import org.stjs.javascript.annotation.STJSBridge;
  * the ack extension guarantees that messages sent by the server to the clients will be resent in case of temporary network failures that produce
  * loss of messages. It does not guarantee however, that messages sent by the client will reach the server.
  */
-@STJSBridge(sources = "webjar:AckExtension.js")
+@STJSBridge(sources = "webjar:/AckExtension.js")
 public class AckExtension extends CometdExtension {
 }

@@ -8,7 +8,7 @@ import org.stjs.javascript.annotation.STJSBridge;
  * <p/>
  * In both Dojo and jQuery extension bindings, the extension is registered on the default cometd object under the name "reload".
  */
-@STJSBridge(sources = "webjar:ReloadExtension.js")
+@STJSBridge(sources = "webjar:/ReloadExtension.js")
 public class ReloadExtension extends CometdExtension {
 
 	/**

@@ -245,7 +245,7 @@ import org.stjs.javascript.functions.Callback4;
  * <p/>
  * The Bayeux server processes batched messages in the order they are sent.
  */
-@STJSBridge(sources = "webjar:cometd.js")
+@STJSBridge(sources = "webjar:/cometd.js")
 public class Cometd {
 
 	/**
