@@ -4,7 +4,7 @@
 
 	<groupId>org.st-js.bridge</groupId>
 	<artifactId>cometd</artifactId>
-	<version>2.4.0.bv1-SNAPSHOT</version>
+	<version>2.4.0.bv1</version>
 	<packaging>jar</packaging>
 	<name>Strongly-typed Javascript:Cometd Bridge Library</name>
 
@@ -57,7 +57,7 @@
 		<connection>scm:git:https://github.com/st-js/cometd-bridge.git</connection>
 		<developerConnection>scm:git:https://github.com/st-js/cometd-bridge.git</developerConnection>
 		<url>scm:git:https://github.com/st-js/cometd-bridge</url>
-	  <tag>HEAD</tag>
+	  <tag>cometd-2.4.0.bv1</tag>
   	</scm>
 
 </project>
