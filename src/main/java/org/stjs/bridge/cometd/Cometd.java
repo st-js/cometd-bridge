@@ -1,5 +1,6 @@
 package org.stjs.bridge.cometd;
 
+import org.stjs.javascript.Array;
 import org.stjs.javascript.annotation.STJSBridge;
 import org.stjs.javascript.functions.Callback0;
 import org.stjs.javascript.functions.Callback1;
@@ -256,6 +257,37 @@ public class Cometd {
 	 * @param transportName the name of the transport to un-register
 	 */
 	public native void unregisterTransport(String transportName);
+
+	/**
+	 * Registers the given transport under the given transport type.
+	 * The optional index parameter specifies the "priority" at which the
+	 * transport is registered (where 0 is the max priority).
+	 * If a transport with the same type is already registered, this function
+	 * does nothing and returns false.
+	 * @param type the transport type
+	 * @param transport the transport object
+	 * @param index the index at which this transport is to be registered
+	 * @return true if the transport has been registered, false otherwise
+	 * @see #unregisterTransport(String)
+	 */
+	public native boolean registerTransport(String type, CometdTransport transport, int index);
+
+	/**
+	 * @return an array of all registered transport types
+	 */
+	public native Array<String> getTransportTypes();
+
+	/**
+	 * Unregisters all of the transports from this Cometd instance
+	 */
+	public native void unregisterTransports();
+
+	/**
+	 * Returns the transport with the specified name/type.
+	 * @param name the name of the transport to find
+	 * @return the instance of the transport if found, null if not found
+	 */
+	public native CometdTransport findTransport(String name);
 
 	/**
 	 * Sets the URL of the Bayeux server. The URL of the server must be absolute (and therefore include the scheme,
@@ -777,4 +809,91 @@ public class Cometd {
 	 * and restores the cometd connection and the cometd subscriptions.
 	 */
 	public native void reload(ReloadExtensionConfig config);
+
+	/**
+	 * Removes all subscriptions added via {@link #subscribe},
+	 * but does not remove the listeners added via {@link #addListener}.
+	 */
+	public native void clearSubscriptions();
+
+	/**
+	 * Removes all listeners registered with {@link #addListener} or
+	 * {@link #subscribe}.
+	 */
+	public native void clearListeners();
+
+	/**
+	 * Sends a complete bayeux message.
+	 * This method is exposed as a public so that extensions may use it
+	 * to send bayeux message directly, for example in case of re-sending
+	 * messages that have already been sent but that for some reason must
+	 * be resent.
+	 */
+	public native void send(BayeuxMessage message);
+
+	/**
+	 * Receives a message.
+	 * This method is exposed as a public so that extensions may inject
+	 * messages simulating that they had been received.
+	 */
+	public native void receive(BayeuxMessage message);
+
+	/**
+	 * Returns a string representing the status of the bayeux communication with the Bayeux server.
+	 */
+	public native String getStatus();
+
+	/**
+	 * Sets the backoff period used to increase the backoff time when retrying an unsuccessful or failed message.
+	 * Default value is 1 second, which means if there is a persistent failure the retries will happen
+	 * after 1 second, then after 2 seconds, then after 3 seconds, etc. So for example with 15 seconds of
+	 * elapsed time, there will be 5 retries (at 1, 3, 6, 10 and 15 seconds elapsed).
+	 * @param period the backoff period to set
+	 * @see #getBackoffIncrement()
+	 */
+	public native void setBackoffIncrement(long period);
+
+	/**
+	 * Returns the backoff period used to increase the backoff time when retrying an unsuccessful or failed message.
+	 * @see #setBackoffIncrement(long)
+	 */
+	public native long getBackoffIncrement();
+
+	/**
+	 * Returns the backoff period to wait before retrying an unsuccessful or failed message.
+	 */
+	public native long getBackoffPeriod();
+
+	/**
+	 * Sets the log level for console logging.
+	 * Valid values are the strings 'error', 'warn', 'info' and 'debug', from
+	 * less verbose to more verbose.
+	 * @param level the log level string
+	 */
+	public native void setLogLevel(String level);
+
+	/**
+	 * Returns the name assigned to this Cometd object, or the string 'default'
+	 * if no name has been explicitly passed as parameter to the constructor.
+	 */
+	public native String getName();
+
+	/**
+	 * Returns the clientId assigned by the Bayeux server during handshake.
+	 */
+	public native String getClientId();
+
+	/**
+	 * Returns the URL of the Bayeux server.
+	 */
+	public native String getURL();
+
+	/**
+	 * Returns the instance of the transport that is currently in use.
+	 */
+	public native CometdTransport getTransport();
+
+	public native CometdConfig getConfiguration();
+
+	public native BayeuxAdvice getAdvice();
 }
