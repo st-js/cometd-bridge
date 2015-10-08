@@ -4,7 +4,7 @@ import org.stjs.javascript.Array;
 import org.stjs.javascript.TimeoutHandler;
 import org.stjs.javascript.functions.Callback0;
 
-public class CometdTransport {
+public class CometDTransport {
 
 	/**
 	 * Function invoked just after a transport has been successfully registered.
@@ -13,16 +13,16 @@ public class CometdTransport {
 	 * @param cometd the cometd object this transport has been registered to
 	 * @see #unregistered()
 	 */
-	public native void registered(String type, Cometd cometd);
+	public native void registered(String type, CometD cometd);
 
 	/**
 	 * Function invoked just after a transport has been successfully unregistered.
 	 *
-	 * @see #registered(String, Cometd)
+	 * @see #registered(String, CometD)
 	 */
 	public native void unregistered();
 
-	public native CometdConfig getConfiguration();
+	public native CometDConfig getConfiguration();
 
 	public native BayeuxAdvice getAdvice();
 
@@ -55,7 +55,7 @@ public class CometdTransport {
 	/**
 	 * Returns the type of this transport.
 	 *
-	 * @see #registered(String, Cometd)
+	 * @see #registered(String, CometD)
 	 */
 	public native String getType();
 

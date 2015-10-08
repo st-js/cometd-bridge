@@ -56,7 +56,7 @@ import org.stjs.javascript.annotation.STJSBridge;
  * <pre>offset = ts-tc-lag</pre>
  */
 @STJSBridge(sources = "webjar:/TimeSyncExtension.js")
-public class TimeSyncExtension extends CometdExtension {
+public class TimeSyncExtension extends CometDExtension {
 
 	public TimeSyncExtension() {
 		// nothing to do

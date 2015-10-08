@@ -38,5 +38,5 @@ import org.stjs.javascript.annotation.STJSBridge;
  * loss of messages. It does not guarantee however, that messages sent by the client will reach the server.
  */
 @STJSBridge(sources = "webjar:/AckExtension.js")
-public class AckExtension extends CometdExtension {
+public class AckExtension extends CometDExtension {
 }

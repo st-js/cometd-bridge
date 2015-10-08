@@ -25,7 +25,7 @@ package org.stjs.bridge.cometd;
  * server, or viceversa; it is possible that an extension is only client-side or only server-side, but most of the time both client and server
  * need them. When an extension does not behave as expected, it’s often because the extension is missing on one of the two sides.
  */
-public class CometdExtension {
+public class CometDExtension {
 
 	/**
 	 * Called just before a message is sent
@@ -47,7 +47,7 @@ public class CometdExtension {
 	 * @param name   the name under which the extension was registered
 	 * @param cometd the CometD client in which the extension was registered
 	 */
-	public native void registered(String name, Cometd cometd);
+	public native void registered(String name, CometD cometd);
 
 	/**
 	 * Called when the extension is unregistered

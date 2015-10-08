@@ -13,7 +13,7 @@ import org.stjs.javascript.functions.Callback4;
  * <p/>
  * <h3>Configuring and Initializing</h3>
  * <p/>
- * The complete API is available through a single object prototype named <tt>org.cometd.Cometd</tt>. The Dojo toolkit has one instance of this
+ * The complete API is available through a single object prototype named <tt>org.cometd.CometD</tt>. The Dojo toolkit has one instance of this
  * object available under the name <tt>dojox.cometd</tt>, while for jQuery it is available under the name <tt>$.cometd</tt>. This default cometd
  * object has been instantiated and configured with the default values and it has not yet started any Bayeux communication.
  * <p/>
@@ -237,7 +237,7 @@ import org.stjs.javascript.functions.Callback4;
  * <p/>
  * Batches can consist of different API calls:
  * <p/>
- * CometdSubscription subscription;
+ * CometDSubscription subscription;
  * cometd.batch(() -> {
  * cometd.unsubscribe(subscription);
  * subscription = cometd.subscribe("/foo", message -> ...);
@@ -247,7 +247,7 @@ import org.stjs.javascript.functions.Callback4;
  * The Bayeux server processes batched messages in the order they are sent.
  */
 @STJSBridge(sources = "webjar:/cometd.js")
-public class Cometd {
+public class CometD {
 
 	/**
 	 * Unregisters the transport with the specified name. This can be useful to force the use of
@@ -270,7 +270,7 @@ public class Cometd {
 	 * @return true if the transport has been registered, false otherwise
 	 * @see #unregisterTransport(String)
 	 */
-	public native boolean registerTransport(String type, CometdTransport transport, int index);
+	public native boolean registerTransport(String type, CometDTransport transport, int index);
 
 	/**
 	 * @return an array of all registered transport types
@@ -278,7 +278,7 @@ public class Cometd {
 	public native Array<String> getTransportTypes();
 
 	/**
-	 * Unregisters all of the transports from this Cometd instance
+	 * Unregisters all of the transports from this CometD instance
 	 */
 	public native void unregisterTransports();
 
@@ -287,7 +287,7 @@ public class Cometd {
 	 * @param name the name of the transport to find
 	 * @return the instance of the transport if found, null if not found
 	 */
-	public native CometdTransport findTransport(String name);
+	public native CometDTransport findTransport(String name);
 
 	/**
 	 * Sets the URL of the Bayeux server. The URL of the server must be absolute (and therefore include the scheme,
@@ -313,7 +313,7 @@ public class Cometd {
 	 *
 	 * @param configuration The full configuration of this client
 	 */
-	public native void configure(CometdConfig configuration);
+	public native void configure(CometDConfig configuration);
 
 	/**
 	 * Equivalent to calling <tt>handshake(null, null)</tt>
@@ -402,7 +402,7 @@ public class Cometd {
 	 * @param onMessageReceived a listener callback that is called each time a message is received on the channel
 	 * @return a subscription object that can be passed to <tt>unsubscribe()</tt>
 	 */
-	public native CometdSubscription subscribe(String channel, Callback1<BayeuxMessage> onMessageReceived);
+	public native CometDSubscription subscribe(String channel, Callback1<BayeuxMessage> onMessageReceived);
 
 	/**
 	 * Equivalent to calling <tt>subscribe(channel, onMessageReceived, null, onSubscribeReply)</tt>
@@ -412,7 +412,7 @@ public class Cometd {
 	 * @param onSubscribeReply  a callback that is called once when the subscription is replied to, either successfully or unsuccessfully
 	 * @return a subscription object that can be passed to <tt>unsubscribe()</tt>
 	 */
-	public native CometdSubscription subscribe(String channel, Callback1<BayeuxMessage> onMessageReceived,
+	public native CometDSubscription subscribe(String channel, Callback1<BayeuxMessage> onMessageReceived,
 			Callback1<BayeuxMessage> onSubscribeReply);
 
 	/**
@@ -454,7 +454,7 @@ public class Cometd {
 	 * <tt>subscribe()</tt> returns a subscription object that must be passed to and <tt>unsubscribe()</tt>:
 	 * <pre>
 	 * // Some initialization code
-	 * CometdSubscription subscription = cometd.subscribe("/foo/bar/", message -> ...);
+	 * CometDSubscription subscription = cometd.subscribe("/foo/bar/", message -> ...);
 	 * // Some de-initialization code
 	 * cometd.unsubscribe(subscription);
 	 * </pre>
@@ -472,7 +472,7 @@ public class Cometd {
 	 * @param onSubscribeReply  a callback that is called once when the subscription is replied to, either successfully or unsuccessfully
 	 * @return a subscription object that can be passed to <tt>unsubscribe()</tt>
 	 */
-	public native CometdSubscription subscribe(String channel, Callback1<BayeuxMessage> onMessageReceived, Object additional,
+	public native CometDSubscription subscribe(String channel, Callback1<BayeuxMessage> onMessageReceived, Object additional,
 			Callback1<BayeuxMessage> onSubscribeReply);
 
 	/**
@@ -480,7 +480,7 @@ public class Cometd {
 	 *
 	 * @param subscription the subscription that is to be cleared.
 	 */
-	public native void unsubscribe(CometdSubscription subscription);
+	public native void unsubscribe(CometDSubscription subscription);
 
 	/**
 	 * Clears the specified subscription.
@@ -492,7 +492,7 @@ public class Cometd {
 	 * @param additional         An object containing additional informations/fields that will be merged into the unsubscribe message
 	 * @param onUnsubscribeReply a callback that is called once when the un-subscription is replied to, either successfully or unsuccessfully
 	 */
-	public native void unsubscribe(CometdSubscription subscription, Object additional, Callback1<BayeuxMessage> onUnsubscribeReply);
+	public native void unsubscribe(CometDSubscription subscription, Object additional, Callback1<BayeuxMessage> onUnsubscribeReply);
 
 	/**
 	 * Re-subscribes a subscription that was previously unsubscribed (either because it was explicitly unsubscribed, or because the Bayeux
@@ -500,7 +500,7 @@ public class Cometd {
 	 *
 	 * @param subscription the handle to a subscription that was previous unsubscribed.
 	 */
-	public native void resubscribe(CometdSubscription subscription);
+	public native void resubscribe(CometDSubscription subscription);
 
 	/**
 	 * A callback function that is called each time a listener or subscriber function throws an exception. By default the error message is
@@ -520,7 +520,7 @@ public class Cometd {
 	 * It is possible to send messages to the server from the listener exception handler. If the listener exception handler itself throws an
 	 * exception, this exception is logged at level "info" and the CometD implementation does not break.
 	 */
-	public Callback4<Object, CometdSubscription, Boolean, BayeuxMessage> onListenerException;
+	public Callback4<Object, CometDSubscription, Boolean, BayeuxMessage> onListenerException;
 
 	/**
 	 * Synchronously adds a listener to the specified meta channel.
@@ -587,14 +587,14 @@ public class Cometd {
 	 * @param channel           the name of the meta channel to listen to
 	 * @param onMessageReceived a callback function that is invoked any time a message is received on the channel
 	 */
-	public native CometdSubscription addListener(String channel, Callback1<BayeuxMessage> onMessageReceived);
+	public native CometDSubscription addListener(String channel, Callback1<BayeuxMessage> onMessageReceived);
 
 	/**
 	 * Clears the specified listener.
 	 *
 	 * @param subscription the subscription that is to be cleared.
 	 */
-	public native void removeListener(CometdSubscription subscription);
+	public native void removeListener(CometDSubscription subscription);
 
 	/**
 	 * Equivalent to calling <tt>publish(channel, messagePayload, null)</tt>
@@ -678,7 +678,7 @@ public class Cometd {
 	public native void disconnect(Object additional, Callback1<BayeuxMessage> onDisconnectReply);
 
 	/**
-	 * Checks if this Cometd client is connected or not. The bayeux client will always set this flag to the most up to date value before
+	 * Checks if this CometD client is connected or not. The bayeux client will always set this flag to the most up to date value before
 	 * notifying listeners or callback functions.
 	 *
 	 * @return true if this client is disconnected from the Bayeux server, false if is still connected
@@ -724,7 +724,7 @@ public class Cometd {
 	 * @param configuration       the full configuration of this client
 	 * @param handshakeAdditional An object containing additional informations/fields that will be merged into the handshake message
 	 */
-	public native void init(CometdConfig configuration, Object handshakeAdditional);
+	public native void init(CometDConfig configuration, Object handshakeAdditional);
 
 	/**
 	 * Registers an extension whose callbacks are called for every incoming message
@@ -746,11 +746,11 @@ public class Cometd {
 	 * @return true if the extension was registered, false otherwise
 	 * @see #unregisterExtension(String)
 	 */
-	public native void registerExtension(String name, CometdExtension extension);
+	public native void registerExtension(String name, CometDExtension extension);
 
 	/**
 	 * Unregister an extension previously registered with
-	 * {@link #registerExtension(String, CometdExtension)}.
+	 * {@link #registerExtension(String, CometDExtension)}.
 	 *
 	 * @param name the name of the extension to unregister.
 	 * @return true if the extension was unregistered, false otherwise
@@ -763,7 +763,7 @@ public class Cometd {
 	 * @param name the name of the extension to find
 	 * @return the extension found or null if no extension with the given name has been registered
 	 */
-	public native CometdExtension getExtension(String name);
+	public native CometDExtension getExtension(String name);
 
 	/**
 	 * Defines the global extension exception handler that is invoked every time an extension throws an exception (for example, calling a
@@ -873,7 +873,7 @@ public class Cometd {
 	public native void setLogLevel(String level);
 
 	/**
-	 * Returns the name assigned to this Cometd object, or the string 'default'
+	 * Returns the name assigned to this CometD object, or the string 'default'
 	 * if no name has been explicitly passed as parameter to the constructor.
 	 */
 	public native String getName();
@@ -891,9 +891,9 @@ public class Cometd {
 	/**
 	 * Returns the instance of the transport that is currently in use.
 	 */
-	public native CometdTransport getTransport();
+	public native CometDTransport getTransport();
 
-	public native CometdConfig getConfiguration();
+	public native CometDConfig getConfiguration();
 
 	public native BayeuxAdvice getAdvice();
 }
